@@ -1,0 +1,4 @@
+# Add Environment Variables
+
+MYSQL_ROOT_PASSWORD=pandora
+

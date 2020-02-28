@@ -1,0 +1,128 @@
+# Copyright (c) 2014, 2016, Oracle and/or its affiliates. All rights reserved.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; version 2 of the License.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+
+#
+# The MySQL  Server configuration file.
+#
+# For explanations see
+# http://dev.mysql.com/doc/mysql/en/server-system-variables.html
+
+[mysql]
+default-character-set = utf8
+
+[mysql.server]
+default-character-set = utf8
+
+[mysqld_safe]
+default-character-set = utf8
+
+[client]
+default-character-set = utf8
+
+[mysqld]
+pid-file	= /var/run/mysqld/mysqld.pid
+socket		= /var/run/mysqld/mysqld.sock
+datadir		= /var/lib/mysql
+#log-error	= /var/log/mysql/error.log
+# By default we only accept connections from localhost
+#bind-address	= 127.0.0.1
+# Disabling symbolic-links is recommended to prevent assorted security risks
+symbolic-links=0
+
+
+gtid_mode=on
+enforce_gtid_consistency=on
+binlog_gtid_simple_recovery=on
+
+server-id        = 1
+log_bin          = /var/lib/mysql/mysql-bin.log
+# expire_logs_days = 10
+max_binlog_size  = 512M
+binlog-format    = row
+
+# show status like 'Threads%';
+max_connections  = 1000
+character_set_server = utf8
+max_allowed_packet = 20971520
+innodb_lock_wait_timeout  = 900
+
+
+# show global status like "created_tmp%";
+tmp_table_size = 64M
+max_heap_table_size = 64M
+
+
+# show status like '%innodb_buffer_pool%';
+innodb_buffer_pool_instances = 8
+innodb_buffer_pool_size  = 256M
+innodb_log_buffer_size=64M
+
+
+# show status like 'qcache%';
+query_cache_type = off　　
+#query_cache_size = 128M　
+#query_cache_limit = 1M
+
+thread_cache_size = 1
+
+table_open_cache = 8000
+table_open_cache_instances=16
+
+# /proc/sys/net/ipv4/tcp_max_syn_backlog
+back_log=512
+
+
+# files
+innodb_file_per_table=1
+innodb_log_file_size=128M
+innodb_log_files_in_group=2
+innodb_open_files=4000
+
+
+
+
+# tune
+# innodb_checksums=0
+# innodb_doublewrite= 0 / 1
+# innodb_support_xa=0
+# innodb_thread_concurrency=0 / 64
+# innodb_flush_log_at_trx_commit=2 / 1
+# innodb_flush_method=O_DIRECT_NOFSYNC
+# innodb_max_dirty_pages_pct=90
+# innodb_max_dirty_pages_pct_lwm=10
+# innodb_lru_scan_depth=4000
+# innodb_page_cleaners=4
+# join_buffer_size=32K
+# sort_buffer_size=32K
+# innodb_use_native_aio=1
+# innodb_stats_persistent = 1
+# innodb_spin_wait_delay=6 / 96
+
+# perf special
+# innodb_adaptive_flushing = 1
+# innodb_flush_neighbors = 0
+# innodb_read_io_threads = 4
+# innodb_write_io_threads = 4
+# innodb_io_capacity=2000
+# innodb_io_capacity_max=4000
+# innodb_purge_threads=4
+# innodb_max_purge_lag_delay=30000000
+# innodb_max_purge_lag=0
+# innodb_adaptive_hash_index=0
+
+# Monitoring
+innodb_monitor_enable = '%'
+# performance_schema=OFF
+

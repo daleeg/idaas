@@ -1,0 +1,16 @@
+# Add Environment Variables
+
+DB_NAME=pandora
+DB_USER=pandora
+DB_PASS=pandora
+DB_SERVICE=idaas_mysql
+DB_PORT=3306
+
+REDIS_HOST=idaas_redis
+REDIS_PORT=6379
+
+MONGO_HOST=idaas_mongo
+MONGO_PORT=27017
+MONGO_USERNAME=root
+MONGO_PASSWORD=pandora
+

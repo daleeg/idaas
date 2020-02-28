@@ -1,0 +1,5 @@
+{
+   "registry-mirrors": ["http://hub-mirror.c.163.com"],
+   "bip": "192.192.0.1/16",
+   "graph": "/data/docker"
+}

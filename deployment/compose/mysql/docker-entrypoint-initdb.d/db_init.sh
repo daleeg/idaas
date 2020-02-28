@@ -1,0 +1,32 @@
+#!/bin/bash
+
+MYSQL_ROOT=root
+MYSQL_PASSWORD=$DB_PASS
+MYSQL_USER=$DB_USER
+MYSQL_PASSWORD=$DB_PASS
+REPL_USER=repl
+REPL_PASSWORD=repl
+MAIN_DB=$DB_NAME
+
+mysqlset=(mysql -u$MYSQL_ROOT -p$MYSQL_PASSWORD)
+
+init_db(){
+    "${mysqlset[@]}" <<-EOSQL
+        DROP DATABASE IF EXISTS $MAIN_DB;
+        CREATE DATABASE $MAIN_DB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
+        DROP USER IF EXISTS $MYSQL_USER;       
+        CREATE USER $MYSQL_USER IDENTIFIED BY "$MYSQL_PASSWORD";
+        GRANT ALL PRIVILEGES ON ${MAIN_DB}.* to '$MYSQL_USER'@'%' IDENTIFIED BY "$MYSQL_PASSWORD";
+        GRANT USAGE ON *.* TO '$MYSQL_USER'@'%';
+        DROP USER IF EXISTS $REPL_USER;
+        CREATE USER $REPL_USER IDENTIFIED BY "$REPL_PASSWPRD";
+        GRANT REPLICATION SLAVE ON *.* to '$REPL_USER'@'%' IDENTIFIED BY "$REPL_PASSWPRD";
+        
+        FLUSH PRIVILEGES;
+EOSQL
+
+    if [ $? -ne 0 ]; then
+        echo "failed to init db. Please check mysql accessbility."
+    fi
+}
+init_db

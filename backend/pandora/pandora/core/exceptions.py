@@ -1,0 +1,113 @@
+# -*- coding: utf-8 -*-
+from __future__ import absolute_import, unicode_literals
+
+from django.utils.translation import ugettext_lazy as _
+from rest_framework.exceptions import APIException
+from rest_framework import status
+
+from pandora.core.code import NO_PERMISSION, NOT_AUTHENTICATED, AUTHENTICATION_FAILED, RETURN_MSG
+from pandora.core.code import LICENSE_LIMIT, LICENSE_EXPIRING
+
+
+class BaseException(APIException):
+    status_code = status.HTTP_200_OK  # always 200
+
+    def __init__(self, code, message=None):
+        self.detail = {'code': code, 'message': message or RETURN_MSG[code]}
+
+    def __str__(self):
+        return "{}".format(self.detail)
+
+
+class AuthenticationFailed(BaseException):
+    def __init__(self, message=None):
+        self.detail = {'code': AUTHENTICATION_FAILED, 'message': message or _('认证错误。')}
+
+
+class NotAuthenticated(BaseException):
+    def __init__(self, ):
+        self.detail = {'code': NOT_AUTHENTICATED, 'message': _('请登录。')}
+
+
+class PermissionDenied(BaseException):
+    def __init__(self, message=None):
+        if message:
+            self.detail = {'code': NO_PERMISSION, 'message': message}
+        else:
+            self.detail = {'code': NO_PERMISSION, 'message': _('无访问权限。')}
+
+
+class LicenseLimitOut(BaseException):
+    def __init__(self, message=None):
+        if message:
+            self.detail = {'code': LICENSE_LIMIT, 'message': _('{}'.format(message))}
+        else:
+            self.detail = {'code': LICENSE_LIMIT, 'message': RETURN_MSG[LICENSE_LIMIT]}
+
+
+class LicenseExpiring(BaseException):
+    def __init__(self, message=None):
+        if message:
+            self.detail = {'code': LICENSE_EXPIRING, 'message': _('{}'.format(message))}
+        else:
+            self.detail = {'code': LICENSE_EXPIRING, 'message': RETURN_MSG[LICENSE_EXPIRING]}
+
+
+class CreateError(Exception):
+    pass
+
+
+class NetworkError(Exception):
+    pass
+
+
+class FetchError(Exception):
+    pass
+
+
+class UpdateError(Exception):
+    pass
+
+
+class DeleteError(Exception):
+    pass
+
+
+class EmptyDataError(Exception):
+    pass
+
+
+class FileEncodeError(Exception):
+    pass
+
+
+class DataEmptyError(Exception):
+    pass
+
+
+class DataInvalidError(Exception):
+    def __init__(self, message):
+        super(DataInvalidError, self).__init__()
+        self.message = message
+
+
+class DeleteProtectedError(Exception):
+    def __init__(self, model_name=None, field=None, message=None):
+        super(DeleteProtectedError, self).__init__()
+        protect_map = {'course': '课程',
+                       'classroom_exam': '考场',
+                       'classroom_meeting': '会场',
+                       'teacher': '教师',
+                       'student': '学生',
+                       'permissions': '权限',
+                       'course_set': '课程',
+                       'course_table': '课程表',
+                       'device': '班牌',
+                       'manager': '课表集',
+                       'section': '班级',
+                       'classmember_set': '班级学生关系',
+                       'classroom': '教室'}
+        try:
+            self.message = message or _("无法删除{0},原因: {0}与{1}存在关联关系".format(model_name, protect_map[field]))
+        except (Exception,):
+            self.message = _("不能删除这条记录")

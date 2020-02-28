@@ -1,0 +1,156 @@
+version: '3.1'
+
+services:
+
+  idaas_redis:
+    restart: always
+    build: ./redis/
+    ports:
+      - "16379:6379"
+    volumes:
+      - /opt/idaas/pandora/redis_data:/data
+    networks:
+      - default
+      - pandora_net
+
+  idaas_nginx:
+    restart: always
+    build: ./nginx/
+    ports:
+      - "80:80"
+      - "14001:14001"
+    links:
+      - idaas_backend:backend
+      - idaas_fileserver:fileserver
+    networks:
+      - default
+      - pandora_net
+    depends_on:
+      - idaas_backend
+      - idaas_fileserver
+    volumes:
+      - /opt/idaas/src/:/usr/share/nginx
+      - /opt/idaas/compose/pandora/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - /opt/idaas/compose/pandora/nginx/conf.d:/etc/nginx/conf.d
+      - /etc/localtime:/etc/localtime
+
+  idaas_mysql:
+    restart: always
+    build: ./mysql
+    ports:
+      - "13306:3306"
+    env_file:
+      - ./env/mysql
+      - ./env/app
+    networks:
+      - default
+      - pandora_net
+    volumes:
+      - /opt/idaas/data/mysql_data:/var/lib/mysql
+      - /etc/localtime:/etc/localtime
+
+  idaas_mongo:
+    restart: always
+    build: ./mongo
+    ports:
+      - "17017:27017"
+    env_file:
+      - ./env/mongo
+      - ./env/app
+    networks:
+      - default
+      - pandora_net
+    volumes:
+      - /opt/idaas/data/mongo_data:/data/db
+      - /etc/localtime:/etc/localtime
+
+
+  idaas_emqx:
+    restart: always
+    build: ./emqx/
+    ports:
+      - "18083:18083"
+      - "13125:1883"
+    env_file:
+      - ./env/emqx
+    networks:
+      - default
+      - pandora_net
+    volumes:
+      - /etc/localtime:/etc/localtime
+
+  idaas_backend:
+    image: pandora:lastest
+    privileged: true
+    links:
+      - idaas_mysql:idaas_mysql
+      - idaas_mongo:idaas_mongo
+      - idaas_redis:idaas_redis
+
+    depends_on:
+      - idaas_mysql
+      - idaas_mongo
+      - idaas_redis
+    networks:
+      - default
+      - pandora_net
+    volumes:
+      - /opt/idaas/src/backend/pandora:/pandora/
+      - /var/log/idaas/pandora/:/var/log/idaas/pandora/
+      - /opt/idaas/static_data:/file/
+      - /etc/localtime:/etc/localtime
+      - /etc/timezone:/etc/timezone
+      - /sbin/hwclock:/sbin/hwclock
+    env_file:
+      - ./env/app
+      - ./env/mqtt
+    environment:
+      DEBUG: 'false'
+    command: 'uwsgi --ini /pandora/uwsgi.ini'
+    sysctls:
+      net.core.somaxconn: 65535
+    ulimits:
+      nproc: 65535
+      nofile:
+        soft: 20000
+        hard: 40000
+
+  idaas_fileserver:
+    image: pandora:lastest
+    privileged: true
+    links:
+      - idaas_mysql:idaas_mysql
+      - idaas_mongo:idaas_mongo
+      - idaas_redis:idaas_redis
+
+    depends_on:
+      - idaas_mysql
+      - idaas_mongo
+      - idaas_redis
+
+    networks:
+      - default
+      - pandora_net
+    volumes:
+      - /opt/idaas/src/backend/pandora:/pandora/
+      - /var/log/idaas/pandora/:/var/log/idaas/pandora/
+      - /opt/idaas/static_data:/file/
+      - /etc/localtime:/etc/localtime
+      - /etc/timezone:/etc/timezone
+      - /sbin/hwclock:/sbin/hwclock
+    env_file:
+      - ./env/app
+    environment:
+      DEBUG: 'false'
+    command: 'uwsgi --ini /pandora/uwsgi.ini'
+    sysctls:
+      net.core.somaxconn: 65535
+    ulimits:
+      nproc: 65535
+      nofile:
+        soft: 20000
+        hard: 40000
+
+networks:
+  pandora_net:
+    external: true
