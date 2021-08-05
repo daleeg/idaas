@@ -12,7 +12,7 @@ except ImportError:
 def base64_to_jpg(content, path, name):
     imgdata = b64decode(content)
     jpg_path = os.path.join(path, name)
-    with open(jpg_path, 'wb') as file:
+    with open(jpg_path, "wb") as file:
         file.write(imgdata)
     return jpg_path
 
@@ -20,13 +20,13 @@ def base64_to_jpg(content, path, name):
 def base64_to_file(content, path, name):
     data = b64decode(content)
     path = os.path.join(path, name, )
-    with open(path, 'wb') as file:
+    with open(path, "wb") as file:
         file.write(data)
     return path
 
 
 def base64_from_file(file_name):
-    with open(file_name, 'rb') as file:
+    with open(file_name, "rb") as file:
         content = file.read()
     if content:
         result = b64encode(content)
@@ -43,3 +43,12 @@ def dbsafe_decode(value, compress_object=False):
     if compress_object:
         value = decompress(value)
     return loads(value)
+
+
+def base64_to_ori(content):
+    if not content:
+        return None
+    if isinstance(content, bytes):
+        content = content.decode("utf-8")
+    str_content = b64decode(content).decode("utf8")
+    return str_content

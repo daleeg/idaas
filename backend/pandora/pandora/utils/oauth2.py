@@ -2,9 +2,9 @@ import random
 
 CLIENT_SECRET_GENERATOR_LENGTH = 128
 CLIENT_ID_GENERATOR_LENGTH = 40
-UNICODE_ASCII_CHARACTER_SET = ('abcdefghijklmnopqrstuvwxyz'
-                               'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-                               '0123456789')
+UNICODE_ASCII_CHARACTER_SET = ("abcdefghijklmnopqrstuvwxyz"
+                               "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                               "0123456789")
 
 
 def generate_client_pair():
@@ -31,4 +31,4 @@ def generate_token(length=30, chars=UNICODE_ASCII_CHARACTER_SET):
     why SystemRandom is used instead of the default random.choice method.
     """
     rand = random.SystemRandom()
-    return ''.join(rand.choice(chars) for x in range(length))
+    return "".join(rand.choice(chars) for x in range(length))

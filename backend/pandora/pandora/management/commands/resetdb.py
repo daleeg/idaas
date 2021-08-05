@@ -15,7 +15,7 @@ def reset_db():
     # Below line  is hide your warning
     cursor.execute("SET sql_notes = 0; ")
     cursor.execute("drop database IF exists {}".format(db_info["NAME"]))
-    cursor.execute("create database {} character set utf8 default collate utf8_general_ci".format(db_info["NAME"]))
+    cursor.execute("create database {} character set utf8mb4 default collate utf8mb4_general_ci".format(db_info["NAME"]))
     cursor.execute("SET sql_notes = 1; ")
     cursor.close()
     db.close()
@@ -23,10 +23,10 @@ def reset_db():
 
 class Command(BaseCommand):
     def handle(self, *args, **options):
-        self.stdout.write("reset db start\n", ending='')
+        self.stdout.write("reset db start\n", ending="")
         try:
             reset_db()
         except Exception as e:
-            self.stdout.write("reset db failed\n", ending='')
+            self.stdout.write("reset db failed\n", ending="")
             raise CommandError(e)
-        self.stdout.write("reset db finish\n", ending='')
+        self.stdout.write("reset db finish\n", ending="")

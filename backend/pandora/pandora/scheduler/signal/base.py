@@ -14,19 +14,19 @@ LOG = logging.getLogger(__name__)
 
 @before_task_publish.connect
 def before_task_sent_handler(sender=None, headers=None, body=None, routing_key=None, **kwargs):
-    info = headers if 'task' in headers else body
-    LOG.info('before_task_publish for task {info[id]} routing_key {rk}'.format(info=info, rk=routing_key))
+    info = headers if "task" in headers else body
+    LOG.info("before_task_publish for task {info[id]} routing_key {rk}".format(info=info, rk=routing_key))
 
 
 @after_task_publish.connect
 def after_task_sent_handler(sender=None, headers=None, body=None, routing_key=None, **kwargs):
-    info = headers if 'task' in headers else body
-    LOG.info('after_task_publish for task {info[id]} routing_key {rk}'.format(info=info, rk=routing_key))
+    info = headers if "task" in headers else body
+    LOG.info("after_task_publish for task {info[id]} routing_key {rk}".format(info=info, rk=routing_key))
 
 
 @task_retry.connect
 def retry_task_handler(sender=None, request=None, reason=None, einfo=None, **kwargs):
-    LOG.info('retry_task {}----{}'.format(sender, reason))
+    LOG.info("retry_task {}----{}".format(sender, reason))
 
 
 @task_success.connect

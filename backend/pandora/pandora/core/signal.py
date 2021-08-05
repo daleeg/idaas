@@ -1,4 +1,3 @@
 import django.dispatch
 
-app_broad = django.dispatch.Signal(providing_args=["instance", "id", "kind", "action", "extra", "group", "member"],
-                                   use_caching=True)
+message_channel = django.dispatch.Signal(providing_args=["instance", "table", "event"], use_caching=True)

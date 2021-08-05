@@ -1,6 +1,6 @@
 from django.contrib.auth.models import AnonymousUser
-from pandora.utils.keyvalue_utils import get_virth_users
-from pandora.models import VirtualUserRoleSet
+from pandora.models.collection import CommonStatus, VirtualUserRoleSet, InterfacePermissionSet
+from pandora.business.base import get_object_info
 
 
 class DeviceUser(AnonymousUser):
@@ -19,28 +19,27 @@ class DeviceUser(AnonymousUser):
         return True
 
 
-class VirthSuperUser(AnonymousUser):
+class ClientUser(AnonymousUser):
     is_active = True
     is_auth = False
-    role = VirtualUserRoleSet.SUPPER
+    role = VirtualUserRoleSet.CLIENT
 
     def __init__(self, client_id):
         self.username = client_id
         self.last_name = client_id
 
     def __str__(self):
-        return 'VirthSuperUser:{}'.format(self.username)
+        return 'App Client User:{}'.format(self.username)
 
     def check_password(self, raw_password):
-        users = get_virth_users()
-        client_secret = users.get(self.username, None)
-        if client_secret and client_secret == raw_password:
-            self.is_auth = True
-            self.is_staff = True
-            self.is_superuser = True
-            return True
-        return False
+        return True
+
+    def auto_pass_authenticated(self):
+        self.is_auth = True
+        self.is_staff = True
+        self.is_superuser = True
 
     @property
     def is_authenticated(self):
         return self.is_auth
+

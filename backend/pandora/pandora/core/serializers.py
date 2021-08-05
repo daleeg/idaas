@@ -1,12 +1,17 @@
-import uuid
 import logging
 import json
 from django.utils.encoding import smart_text
 from django.utils.translation import ugettext_lazy as _
 from django.db.utils import IntegrityError
+
 from django.db.models import F
+from django.core.validators import  MaxValueValidator, MinValueValidator
+from rest_framework.utils.formatting import lazy_format
+
+
 from rest_framework import serializers
-from rest_framework import fields
+from rest_framework.utils import model_meta
+
 from pandora.core.exceptions import CreateError, LicenseLimitOut, LicenseExpiring
 
 LOG = logging.getLogger(__name__)
@@ -15,16 +20,16 @@ LOG = logging.getLogger(__name__)
 class SlugRelatedField(serializers.RelatedField):
     """
     A read-write field that represents the target of the relationship
-    by a unique 'slug' attribute.
+    by a unique "slug" attribute.
     """
     default_error_messages = {
-        'does_not_exist': _('{slug_name}={value} 不存在.'),
-        'invalid': _('参数无效.'),
-        'unknown': _('其他错误, 详情: {e}'),
+        "does_not_exist": _("{slug_name}={value} 不存在."),
+        "invalid": _("参数无效."),
+        "unknown": _("其他错误, 详情: {e}"),
     }
 
     def __init__(self, slug_field="uid", serializer=None, insert_field=None, **kwargs):
-        assert slug_field is not None, 'The `slug_field` argument is required.'
+        assert slug_field is not None, "The `slug_field` argument is required."
         self.slug_field = slug_field
         self.serializer = serializer
         self.insert_field = insert_field
@@ -42,12 +47,13 @@ class SlugRelatedField(serializers.RelatedField):
             insert_field_data = getattr(self.context.get("view"), self.insert_field, None)
             if insert_field_data:
                 filter_data[self.insert_field] = insert_field_data
+        queryset = self.get_queryset()
         try:
-            queryset = self.get_queryset().filter(**filter_data)
+            queryset = queryset.filter(**filter_data)
         except (TypeError, ValueError):
-            self.fail('invalid')
+            self.fail("invalid")
         except Exception as e:
-            self.fail('unknown', e=e)
+            self.fail("unknown", e=e)
 
         if queryset.exists():
             return queryset[0]
@@ -55,7 +61,7 @@ class SlugRelatedField(serializers.RelatedField):
             if isinstance(data, dict):
                 return data
             else:
-                self.fail('does_not_exist', slug_name=self.slug_field, value=smart_text(data))
+                self.fail("does_not_exist", slug_name=self.slug_field, value=smart_text(data))
 
     def to_representation(self, obj):
         if self.serializer:
@@ -68,26 +74,22 @@ class SlugRelatedField(serializers.RelatedField):
 class SmallFloatField(serializers.Field):
     MAX_STRING_LENGTH = 8
     default_error_messages = {
-        'invalid': _('需要为有效的浮点字符串格式, 如 1.1'),
-        'max_string_length': _('点字符串长度最长为8位, 如 123.4567')
+        "invalid": _("需要为有效的浮点字符串格式, 如 1.1"),
+        "max_value": _("Ensure this value is less than or equal to {max_value}."),
+        "min_value": _("Ensure this value is greater than or equal to {min_value}."),
+        "max_string_length": _("点字符串长度最长为8位, 如 123.4567")
     }
 
     def __init__(self, **kwargs):
-        self.max_value = kwargs.pop('max_value', None)
-        self.min_value = kwargs.pop('min_value', None)
+        self.max_value = kwargs.pop("max_value", None)
+        self.min_value = kwargs.pop("min_value", None)
         super(SmallFloatField, self).__init__(**kwargs)
         if self.max_value is not None:
-            message = fields.lazy(
-                self.error_messages['max_value'].format,
-                fields.six.text_type)(max_value=self.max_value)
-            self.validators.append(
-                fields.MaxValueValidator(self.max_value * 100, message=message))
+            message = lazy_format(self.error_messages["max_value"], max_value=self.max_value)
+            self.validators.append(MaxValueValidator(self.max_value * 100, message=message))
         if self.min_value is not None:
-            message = fields.lazy(
-                self.error_messages['min_value'].format,
-                fields.six.text_type)(min_value=self.min_value)
-            self.validators.append(
-                fields.MinValueValidator(self.min_value * 100, message=message))
+            message = lazy_format(self.error_messages["min_value"], min_value=self.min_value)
+            self.validators.append(MinValueValidator(self.min_value * 100, message=message))
 
     def validate_empty_values(self, data):
         ret, data = super(SmallFloatField, self).validate_empty_values(data)
@@ -96,12 +98,12 @@ class SmallFloatField(serializers.Field):
         return ret, data
 
     def to_internal_value(self, data):
-        if isinstance(data, fields.six.text_type) and len(data) > self.MAX_STRING_LENGTH:
-            self.fail('max_string_length')
+        if isinstance(data, str) and len(data) > self.MAX_STRING_LENGTH:
+            self.fail("max_string_length")
         try:
             data = float(data)
         except (TypeError, ValueError):
-            self.fail('invalid')
+            self.fail("invalid")
         data = str(data).split(".")
         data = int("{}{:0<2}".format(data[0], data[1][:2]))
         return data
@@ -112,7 +114,7 @@ class SmallFloatField(serializers.Field):
 
 class DictJsonField(serializers.DictField):
     default_error_messages = {
-        'invalid': _('Value must be valid Dict.')
+        "invalid": _("Value must be valid Dict.")
     }
 
     def __init__(self, *args, **kwargs):
@@ -121,15 +123,15 @@ class DictJsonField(serializers.DictField):
     def get_value(self, dictionary):
         if self.field_name in dictionary:
             data = dictionary[self.field_name]
-            if isinstance(data, serializers.six.text_type):
+            if isinstance(data, str):
                 try:
                     json.loads(data)
                 except (TypeError, ValueError):
-                    self.fail('invalid')
+                    self.fail("invalid")
 
-                class JSONString(serializers.six.text_type):
+                class JSONString(str):
                     def __new__(cls, value):
-                        ret = serializers.six.text_type.__new__(cls, value)
+                        ret = str.__new__(cls, value)
                         ret.is_json_string = True
                         return ret
 
@@ -139,14 +141,14 @@ class DictJsonField(serializers.DictField):
 
     def to_internal_value(self, data):
         try:
-            if getattr(data, 'is_json_string', False):
-                if isinstance(data, serializers.six.binary_type):
-                    data = data.decode('utf-8')
+            if getattr(data, "is_json_string", False):
+                if isinstance(data, bytes):
+                    data = data.decode("utf-8")
                 return data
             else:
                 return json.dumps(data)
         except (TypeError, ValueError):
-            self.fail('invalid')
+            self.fail("invalid")
 
     def to_representation(self, value):
         try:
@@ -154,8 +156,8 @@ class DictJsonField(serializers.DictField):
         except (TypeError, ValueError):
             pass
 
-        if isinstance(value, serializers.six.text_type):
-            value = bytes(value.encode('utf-8'))
+        if isinstance(value, str):
+            value = bytes(value.encode("utf-8"))
         return value
 
 
@@ -251,11 +253,11 @@ class RelatedModelSerializer(serializers.ModelSerializer):
         return instance
 
     def update(self, instance, validated_data):
-        serializers.raise_errors_on_nested_writes('update', self, validated_data)
+        serializers.raise_errors_on_nested_writes("update", self, validated_data)
         info = serializers.model_meta.get_field_info(instance)
 
         # Simply set each attribute on the instance, and then save it.
-        # Note that unlike `.create()` we don't need to treat many-to-many
+        # Note that unlike `.create()` we don"t need to treat many-to-many
         # relationships as being a special case. During updates we already
         # have an instance pk for the relationships to be associated with.
         related_data = {}
@@ -357,9 +359,6 @@ def auto_serializer(data, template):
                 continue
             item[key] = str(item[key])
             value.setdefault("key_list", []).append(str(item[key]))
-        for key, value in item.items():
-            if isinstance(value, uuid.UUID):
-                item[key] = str(value)
     for value in template.values():
         model = value["model"]
         lookup_field = value.get("lookup_field", "uid")
@@ -399,7 +398,7 @@ def auto_serializer(data, template):
                             container[field] = {}
                         container = container[field]
                     else:
-                        container[field] = str(field_value) if isinstance(field_value, uuid.UUID) else field_value
+                        container[field] = field_value
             value.setdefault("data", {})[new_item[lookup_field]] = new_item
     template_items = template.items()
     for item in data:
@@ -410,3 +409,4 @@ def auto_serializer(data, template):
             data_map = value["data"]
             item[key] = data_map.get(field_value)
     return data
+

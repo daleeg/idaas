@@ -16,7 +16,7 @@ def is_in(punchtime, starttime, endtime):
 
 
 # 传入string,如果punchtime在(starttime, endtime)范围内返回TRUE
-# 格式要求：punchtime:'2018-05-07 11:00:00', starttime,endtime:'11:00:00'
+# 格式要求：punchtime:"2018-05-07 11:00:00", starttime,endtime:"11:00:00"
 def is_in_str(punchtime, starttime, endtime):
     punchtime_int = int(
         datetime.datetime.strftime(datetime.datetime.strptime(punchtime, "%Y-%m-%d %H:%M:%S"), "%H%M%S"))
@@ -29,26 +29,26 @@ def is_in_str(punchtime, starttime, endtime):
 
 
 # 传入string如("2018-05-07"，"2018-05-09")
-# 返回[{'date': '2018-05-07', 'weekday': 1}, {'date': '2018-05-08', 'weekday': 2}, {'date': '2018-05-09', 'weekday': 3}]
+# 返回[{"date": "2018-05-07", "weekday": 1}, {"date": "2018-05-08", "weekday": 2}, {"date": "2018-05-09", "weekday": 3}]
 # 星期一~星期日对应（1~7）
 def date_list(begin, end):
     if not begin:
         begin_day = timezone.now()
     else:
-        begin_day = datetime.datetime.strptime(begin, '%Y-%m-%d')
+        begin_day = datetime.datetime.strptime(begin, "%Y-%m-%d")
 
     if not end:
         end_day = timezone.now()
     else:
-        end_day = datetime.datetime.strptime(end, '%Y-%m-%d')
+        end_day = datetime.datetime.strptime(end, "%Y-%m-%d")
 
     datelist = []
     for i in range((end_day - begin_day).days + 1):
         day = begin_day + datetime.timedelta(days=i)
         date = {
-            'date': day.strftime('%Y-%m-%d'),
-            'datetime': day,
-            'weekday': day.isoweekday()
+            "date": day.strftime("%Y-%m-%d"),
+            "datetime": day,
+            "weekday": day.isoweekday()
         }
         datelist.append(date)
     return datelist
@@ -66,14 +66,24 @@ def rand_time(begin, end):
     return datetime.datetime.fromtimestamp(random.uniform(begin.timestamp(), end.timestamp()))
 
 
-def str2_date(date_str):
+def str2_date(date_str, date_format="%Y-%m-%d"):
     if not date_str:
         return None
     try:
-        return timezone.datetime.strptime(date_str, '%Y-%m-%d')
+        return timezone.datetime.strptime(date_str, date_format)
     except (Exception,):
         pass
-    raise AttributeError('wrong time format')
+    raise AttributeError("wrong time format")
+
+
+def str2_date2(date_str):
+    if not date_str:
+        return None
+    try:
+        return timezone.datetime.strptime(date_str, "%Y-%m-%d").date()
+    except (Exception,):
+        pass
+    raise AttributeError("wrong time format")
 
 
 def str2_time(time_str):
@@ -86,7 +96,7 @@ def str2_time(time_str):
             return date_time
         except (Exception,):
             pass
-    raise AttributeError('wrong time format')
+    raise AttributeError("wrong time format")
 
 
 def str2datetime(time_str, format_list=None):
@@ -105,7 +115,7 @@ def str2datetime(time_str, format_list=None):
             return date_time
         except (Exception,):
             pass
-    raise AttributeError('wrong time format')
+    raise AttributeError("wrong time format")
 
 
 def datetime2str_z(dt):
@@ -128,13 +138,13 @@ def str2time_period(time_str, minutes=30):
 
     try:
         begin, end = time_str.split("-")
-        begin = timezone.datetime.strptime(begin, '%H:%M')
-        end = timezone.datetime.strptime(end, '%H:%M')
+        begin = timezone.datetime.strptime(begin, "%H:%M")
+        end = timezone.datetime.strptime(end, "%H:%M")
         pre = begin - timezone.timedelta(minutes=minutes)
         post = end + timezone.timedelta(minutes=minutes)
         return pre.time(), begin.time(), end.time(), post.time()
     except (Exception,):
-        raise AttributeError('wrong time format, need 11:00-12:00')
+        raise AttributeError("wrong time format, need 11:00-12:00")
 
 
 def str2time_period_extra(time_str, pre_minutes=30, pre_start_minutes=0, pre_end_minutes=5):
@@ -148,21 +158,21 @@ def str2time_period_extra(time_str, pre_minutes=30, pre_start_minutes=0, pre_end
 
     try:
         begin, end = time_str.split("-")
-        begin = timezone.datetime.strptime(begin, '%H:%M')
-        end = timezone.datetime.strptime(end, '%H:%M')
+        begin = timezone.datetime.strptime(begin, "%H:%M")
+        end = timezone.datetime.strptime(end, "%H:%M")
         pre = begin - timezone.timedelta(minutes=pre_minutes)
         pre_start = begin + timezone.timedelta(minutes=pre_start_minutes)
         pre_end = begin + timezone.timedelta(minutes=pre_end_minutes)
         return begin.time(), end.time(), pre.time(), pre_start.time(), pre_end.time()
     except (Exception,):
-        raise AttributeError('wrong time format, need 11:00-12:00')
+        raise AttributeError("wrong time format, need 11:00-12:00")
 
 
 def get_latest_days(days=7):
     today = datetime.date.today()
     weeks = []
     for _ in range(days):
-        weeks.append(today.strftime('%Y%m%d'))
+        weeks.append(today.strftime("%Y%m%d"))
         today -= datetime.timedelta(days=1)
     return weeks
 

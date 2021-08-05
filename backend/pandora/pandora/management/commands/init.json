@@ -1,0 +1,9 @@
+[
+  {
+    "model": "Company",
+    "path": "company.csv",
+    "unique_fields": ["name"]
+  }
+
+]
+

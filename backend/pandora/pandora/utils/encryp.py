@@ -2,6 +2,8 @@ import os
 from hashlib import sha256
 from hmac import HMAC
 import base64
+from jwkest.jwk import SYMKey
+from jwkest.jws import JWS
 import sys
 # from Crypto.Cipher import AES
 from binascii import b2a_hex, a2b_hex
@@ -31,6 +33,17 @@ def asymmetric_encrypt(data, salt=None):
     return salt + result
 
 
+def encode_json_to_token(payload, salt="idaas_login", jwt_alg="HS256"):
+    keys = [SYMKey(key=salt, alg=jwt_alg)]
+    _jws = JWS(payload, alg=jwt_alg)
+    return _jws.sign_compact(keys)
+
+
+def decode_json_from_token(token, salt="idaas_login", jwt_alg="HS256"):
+    keys = [SYMKey(key=salt, alg=jwt_alg)]
+    return JWS().verify_compact(token, keys=keys)
+
+
 def authenticate_data(ciphertext, plaintext):
     return ciphertext == asymmetric_encrypt(plaintext, ciphertext[:8])
 
@@ -50,7 +63,7 @@ def authenticate_data(ciphertext, plaintext):
 #         length = session_len
 #         count = len(text)
 #         add = length - (count % length)
-#         text = text + ('\0' * add)
+#         text = text + ("\0" * add)
 #         self.ciphertext = cryptor.encrypt(text)
 #         # 因为AES加密时候得到的字符串不一定是ascii字符集的，输出到终端或者保存时候可能存在问题
 #         # 所以这里统一把加密后的字符串转化为16进制字符串
@@ -61,4 +74,4 @@ def authenticate_data(ciphertext, plaintext):
 #         cryptor = AES.new(self.key, self.mode, self.key[::-1])
 #         plain_text = cryptor.decrypt(a2b_hex(text))
 #         plain_text = plain_text.decode() if isinstance(plain_text, bytes) else plain_text
-#         return plain_text.rstrip('\0')
+#         return plain_text.rstrip("\0")

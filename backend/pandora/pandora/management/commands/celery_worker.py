@@ -9,9 +9,9 @@ from celery.utils.log import mlevel
 class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument(
-            '--logfile', action='store', dest='logfile',
+            "--logfile", action="store", dest="logfile",
             default="/var/log/classboard/pandora/pandora_worker.log",
-            help='logfile path',
+            help="logfile path",
         )
 
     def run_worker(self, hostname=None, loglevel="INFO", logfile=None, pidfile=None, statedb=None):
@@ -24,7 +24,7 @@ class Command(BaseCommand):
             try:
                 loglevel = mlevel(loglevel)
             except KeyError:  # pragma: no cover
-                raise CommandError('Unknown level {0!r} '.format(
+                raise CommandError("Unknown level {0!r} ".format(
                     loglevel, ))
         self.stdout.write("hostname: {}\n".format(hostname))
 
@@ -39,11 +39,11 @@ class Command(BaseCommand):
         return worker.exitcode
 
     def handle(self, *args, **options):
-        self.stdout.write("celery worker start\n", ending='')
+        self.stdout.write("celery worker start\n", ending="")
         try:
             logfile = options["logfile"]
             self.run_worker(logfile=logfile)
         except Exception as e:
-            self.stdout.write("celery worker failed\n", ending='')
+            self.stdout.write("celery worker failed\n", ending="")
             raise CommandError(e)
-        self.stdout.write("celery worker finish\n", ending='')
+        self.stdout.write("celery worker finish\n", ending="")

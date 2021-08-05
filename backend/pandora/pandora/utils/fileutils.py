@@ -1,10 +1,7 @@
 # -*- coding: utf-8 -*-
 
-import os, stat
-# import pwd
+import os
 import uuid
-import qrcode
-import json
 import random
 import sys
 import shutil
@@ -12,8 +9,10 @@ import io
 import chardet
 import logging
 import hashlib
+
 from django.conf import settings
 from django.utils import timezone
+
 from django.core.files.uploadedfile import UploadedFile
 import pandora.utils.constants as cst
 from pandora.core.exceptions import EmptyDataError, FileEncodeError
@@ -21,8 +20,6 @@ from pandora.core.code import SUCCESS
 from pandora.utils.base64utils import base64_to_jpg, base64_to_file
 from pandora.utils.lru import lru_cache
 from pandora.utils.image import resize_image, auto_rotate_image
-
-
 LOG = logging.getLogger(__name__)
 HORIZON_WHEN = "D"
 
@@ -38,17 +35,16 @@ def remove_file(_file):
 @lru_cache(None)
 def get_version_from_file():
     version = {
-        'inside_version': "",
-        'detail_version': "",
-        'release_version': "",
+        "inside_version": "",
+        "detail_version": "",
+        "release_version": "",
     }
-    version_file = os.path.join(os.path.dirname(__file__), os.pardir, os.pardir,
-                                "classboard-version")
+    version_file = os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, "classboard-version")
     try:
         with open(version_file, "r") as f:
             line = f.readline()
             try:
-                version['inside_version'], version['detail_version'], version['release_version'] = line.split()
+                version["inside_version"], version["detail_version"], version["release_version"] = line.split()
             except Exception as e:
                 LOG.error("Error: parse version file {}, details:{}".format(version_file, e))
 
@@ -56,102 +52,6 @@ def get_version_from_file():
         LOG.error("Error: get version file {}, details:{}".format(version_file, e))
     return version
 
-
-@lru_cache(None)
-def get_hostip():
-    if settings.INNER_SERVER:
-        return settings.INNER_SERVER
-    host_file = os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, "HOST")
-    try:
-        with open(host_file, "r") as f:
-            ip = f.read().strip()
-            return ip
-    except Exception as e:
-        LOG.error("Error: get host file {}, details:{}".format(host_file, e))
-    return None
-
-
-# def get_passwd(pw_name):
-#     passwd = pwd.getpwnam(pw_name)
-#     return passwd.pw_uid, passwd.pw_gid
-#
-#
-# def check_passwd(pw_name):
-#     try:
-#         pwd.getpwnam(pw_name)
-#     except Exception as e:
-#         LOG.error("Error: getpwname {}, details:{}".format(pw_name, e))
-#         raise
-#
-#
-# def chown_path(path, uid, gid):
-#     try:
-#         LOG.info("set folder user: {} {}".format(uid, gid))
-#         os.chown(path, uid, gid)
-#     except Exception as e:
-#         LOG.error("Error: set folder user, details:{}".format(e))
-#         return False
-#     return True
-#
-#
-# def chmod_path(path, mode):
-#     try:
-#         LOG.info("set folder mod: {:0>4o}".format(int(mode)))
-#         os.chmod(path, mode)
-#     except Exception as e:
-#         LOG.error("Error: set folder mode, details:{}".format(e))
-#         return False
-#     return True
-#
-#
-# def _make_folder(path, mode, uid, gid):
-#     try:
-#         os.makedirs(path, mode)
-#     except Exception as e:
-#         LOG.error("Error: makedirs {}, details:{}".format(path, e))
-#         return False
-#     return chown_path(path, uid, gid)
-#
-#
-# def make_folder(path, mode=0o644, pw_name="root", force=True):
-#     LOG.info("create folder: {} [{:0>4o}] [{}]".format(path, int(mode), pw_name))
-#     try:
-#         uid, gid = get_passwd(pw_name)
-#     except Exception as e:
-#         LOG.error("Error: get user, details:{}".format(e))
-#         return False
-#     try:
-#         st = os.stat(path)
-#     except OSError:
-#         return _make_folder(path, mode, uid, gid)
-#
-#     if not stat.S_ISDIR(st.st_mode):
-#         if force:
-#             remove_file(path)
-#             return _make_folder(path, mode, uid, gid)
-#         LOG.error(" Path exists: {} , is not folder".format(path))
-#         return False
-#     mod_ret = own_ret = True
-#     if stat.S_IMODE(st.st_mode) != mode:
-#         mod_ret = chmod_path(path, mode)
-#     if st.st_uid != uid or st.st_gid != gid:
-#         own_ret = chown_path(path, uid, gid)
-#     return mod_ret and own_ret
-#
-#
-# def check_folder(path, mode, pw_name):
-#     try:
-#         st = os.stat(path)
-#     except OSError:
-#         return False
-#     uid, gid = get_passwd(pw_name)
-#     return stat.S_ISDIR(st.st_mode) and st.st_uid == uid and st.st_gid == gid and stat.S_IMODE(st.st_mode) == mode
-#
-#
-# def check_and_make_folder(path, mode=0o755, pw_name="root", force=True):
-#     if not check_folder(path, mode, pw_name):
-#         return make_folder(path, mode, pw_name, force)
-#     return True
 
 def common_make_folder(path, mode=0o644):
     if not os.path.exists(path):
@@ -212,35 +112,6 @@ def gen_inner_path(trunk_file, prefix, content_type=None, when="N", md5=True):
     return inner_path
 
 
-def get_attendance_image_url(school_id, record_time, avatar, when=HORIZON_WHEN):
-    try:
-        _n, root, prefix, name = avatar.split("/")
-        group = str(school_id)[0:8]
-        if name.endswith('png'):
-            content_type = "image/png"
-        elif name.endswith('jpg'):
-            content_type = "image/jpg"
-        else:
-            content_type = ""
-        content_type = ""
-        new_avatar = os.path.join("/", root, group, prefix)
-        if when == "M":
-            new_avatar = os.path.join(new_avatar, record_time.strftime("%Y%m"))
-        elif when == "D":
-            new_avatar = os.path.join(new_avatar, record_time.strftime("%Y%m/d%d"))
-        elif when == "Y":
-            new_avatar = os.path.join(new_avatar, record_time.strftime("%Y"))
-        if content_type:
-            new_avatar = os.path.join(new_avatar, content_type, name)
-        else:
-            new_avatar = os.path.join(new_avatar, name)
-        new_avatar = new_avatar.replace("\\", "/")
-    except:
-        new_avatar = avatar
-
-    return new_avatar
-
-
 def save_trunk_file(trunk_file, prefix, name, content_type=None, when=HORIZON_WHEN, md5=False, is_shrink=True):
     # if trunk_file.size > cst.max_image_size:
     #     msg = "max image size {} real size: {}".format(cst.max_image_size, trunk_file.size)
@@ -250,7 +121,7 @@ def save_trunk_file(trunk_file, prefix, name, content_type=None, when=HORIZON_WH
     file_root = os.path.join(settings.FILE_ROOT, inner_path)
     common_make_folder(file_root)
     if not isinstance(trunk_file, UploadedFile):
-        file_name = "{}{}".format(name, '.jpg')
+        file_name = "{}{}".format(name, ".jpg")
         fpath = base64_to_jpg(trunk_file, file_root, file_name)
         is_shrink = False
     else:
@@ -262,7 +133,7 @@ def save_trunk_file(trunk_file, prefix, name, content_type=None, when=HORIZON_WH
                 f.write(c)
         auto_rotate_image(fpath)
 
-    fmd5 = fpath + '.md5'
+    fmd5 = fpath + ".md5"
     with open(fpath, "rb") as rf:
         md5_hash = get_md5_hash(rf)
         with open(fmd5, "w") as f:
@@ -330,7 +201,7 @@ def create_trunk_file_from_tmp(trunk_file, prefix, name, tmp_path, content_type=
     finally:
         remove_folder(os.path.dirname(tmp_path))
 
-    fmd5 = fpath + '.md5'
+    fmd5 = fpath + ".md5"
     with open(fpath, "rb") as rf:
         md5_hash = get_md5_hash(rf)
         with open(fmd5, "w") as f:
@@ -345,13 +216,13 @@ def create_trunk_file_from_tmp(trunk_file, prefix, name, tmp_path, content_type=
 
 def save_base64_file(trunk_file, prefix, name, content_type="jpeg", when=HORIZON_WHEN, md5=False, is_shrink=True):
     inner_path = gen_inner_path(trunk_file, prefix, content_type, when, md5)
-    file_root = os.path.join(settings.FILE_ROOT.rstrip('/'), inner_path)
+    file_root = os.path.join(settings.FILE_ROOT.rstrip("/"), inner_path)
     common_make_folder(file_root)
     ext = cst.ext_map.get(content_type.upper(), ".tmp")
     file_name = "{}{}".format(name, ext) if name else "{}{}".format(uuid.uuid4(), ext)
     fpath = base64_to_file(trunk_file, file_root, file_name)
     auto_rotate_image(fpath)
-    fmd5 = fpath + '.md5'
+    fmd5 = fpath + ".md5"
     with open(fpath, "rb") as rf:
         md5_hash = get_md5_hash(rf)
         with open(fmd5, "w") as f:
@@ -363,7 +234,7 @@ def save_base64_file(trunk_file, prefix, name, content_type="jpeg", when=HORIZON
         except:
             pass
     LOG.info(fpath)
-    url_path = os.path.join(settings.FILE_URL.rstrip('/'), inner_path, file_name)
+    url_path = os.path.join(settings.FILE_URL.rstrip("/"), inner_path, file_name)
     url_path = url_path.replace("\\", "/")
     get_url_path_md5.cache_delete(url_path)
     return SUCCESS, url_path
@@ -371,26 +242,9 @@ def save_base64_file(trunk_file, prefix, name, content_type="jpeg", when=HORIZON
 
 @lru_cache(maxsize=None)
 def get_path_url(path_name):
-    url_path = os.path.join(settings.FILE_URL.rstrip('/'), path_name)
+    url_path = os.path.join(settings.FILE_URL.rstrip("/"), path_name)
     url_path = url_path.replace("\\", "/")
     return url_path
-
-
-def create_qr_image(path, file_name, data):
-    path = os.path.join(settings.FILE_ROOT.rstrip('/'), path)
-    common_make_folder(path)
-    img_path = os.path.join(path, file_name)
-    json_data = json.dumps(data)
-    qr = qrcode.QRCode(
-        version=1,
-        error_correction=qrcode.constants.ERROR_CORRECT_L,
-        box_size=10,
-        border=4,
-    )
-    qr.add_data(json_data)
-    qr.make(fit=True)
-    img = qr.make_image(fill_color="black", back_color="white")
-    img.save(img_path)
 
 
 @lru_cache(maxsize=None)
@@ -399,8 +253,8 @@ def url_2_file_path(url_path):
 
 
 def url_2_file_path_direct(url_path):
-    url_pre_len = len(settings.FILE_URL.rstrip('/')) + 1
-    file_path = os.path.join(settings.FILE_ROOT.rstrip('/'), url_path[url_pre_len:])
+    url_pre_len = len(settings.FILE_URL.rstrip("/")) + 1
+    file_path = os.path.join(settings.FILE_ROOT.rstrip("/"), url_path[url_pre_len:])
     if sys.platform == "win32":
         file_path = file_path.replace("/", "\\")
     else:
@@ -434,7 +288,7 @@ def get_url_path_md5(url_path):
 
 def get_md5_hash(instance):
     if isinstance(instance, str):
-        md5_hash = hashlib.md5(instance.encode(encoding='utf8')).hexdigest()
+        md5_hash = hashlib.md5(instance.encode(encoding="utf8")).hexdigest()
         # LOG.info("str--{}".format(md5_hash))
     elif isinstance(instance, bytes):
         md5_hash = hashlib.md5(instance).hexdigest()
@@ -454,11 +308,11 @@ def read_csv(body):
     if len(lines) < 2:
         raise EmptyDataError
     encode = chardet.detect(lines[0])
-    data_encode = encode['encoding'] or ''
+    data_encode = encode["encoding"] or ""
     if data_encode.upper() in ["UTF-8", "UTF-8-SIG"]:
-        data_decode = data.decode(encode["encoding"], errors='ignore')
+        data_decode = data.decode(encode["encoding"], errors="ignore")
     elif data_encode.upper() in ["ISO-8859-5", "TIS-620", "GB2312"]:
-        data_decode = data.decode("GBK", errors='ignore')
+        data_decode = data.decode("GBK", errors="ignore")
     else:
         raise FileEncodeError
 
@@ -471,3 +325,20 @@ def parse_name_ext(file_name):
     (shot_name, extension) = os.path.splitext(temp_file_name)
     extension = extension.replace(".", "") if extension else None
     return shot_name, extension
+
+
+def parse_pid_file():
+    file = settings.PID_FILE_PATH
+    pid = mac = ""
+    try:
+        with open(file, "r") as f:
+            lines = f.readlines()
+            for line in lines:
+                line = line.strip()
+                if "PID" in line:
+                    pid = line.split("=")[1].strip()
+                elif "MAC" in line:
+                    mac = line.split("=")[1].strip()
+    except:
+        LOG.error("can not read pid file.")
+    return pid, mac

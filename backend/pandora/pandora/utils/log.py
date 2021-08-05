@@ -15,7 +15,7 @@ def _init_log_to_file(log_file, level, _format):
                                                         backupCount=cst.LOG_BACKEUP_COUNT)
     file_handler.setLevel(level)
     # file_handler.suffix = "%Y-%m-%d"
-    file_handler.setFormatter(logging.Formatter(_format, datefmt='%Y-%m-%d %H:%M:%S'))
+    file_handler.setFormatter(logging.Formatter(_format, datefmt="%Y-%m-%d %H:%M:%S"))
     return file_handler
 
 
@@ -27,12 +27,12 @@ def _init_log_to_console(level, _format):
 
 
 def _init_log(log_file, level=cst.FILE_LOG_LEVEL, clevel=cst.CONSOLE_LOG_LEVEL):
-    # _format = '%(asctime)s <%(levelname)s> [%(funcName)s.%(lineno)d]: %(message)s'
-    # _format = '%(asctime)s [%(levelname)s] %(message)s'
-    # _verbose = '[%(filename)s:%(lineno)d] %(levelname)s %(asctime)s %(funcName)s ### %(message)s'
-    _verbose = '[%(levelname)s] %(asctime)s.%(msecs)d %(filename)s(%(lineno)s)/%(funcName)s : %(message)s'
-    # _simple = '[%(filename)s:%(lineno)d] <%(levelname)s> ### %(message)s'
-    _null = '%(message)s'
+    # _format = "%(asctime)s <%(levelname)s> [%(funcName)s.%(lineno)d]: %(message)s"
+    # _format = "%(asctime)s [%(levelname)s] %(message)s"
+    # _verbose = "[%(filename)s:%(lineno)d] %(levelname)s %(asctime)s %(funcName)s ### %(message)s"
+    _verbose = "[%(levelname)s] %(asctime)s.%(msecs)d %(filename)s(%(lineno)s)/%(funcName)s : %(message)s"
+    # _simple = "[%(filename)s:%(lineno)d] <%(levelname)s> ### %(message)s"
+    _null = "%(message)s"
     file_handler = _init_log_to_file(log_file, level, _verbose)
     console = _init_log_to_console(clevel, _null)
     return file_handler, console

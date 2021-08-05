@@ -1,36 +1,15 @@
 # -*- coding: utf-8 -*-
 
-import uuid
 from collections import OrderedDict
 
 
-def check_uuid(v):
-    try:
-        uuid.UUID(v)
-        return v
-    except:
-        return False
-
-
-def get_uuid_list_from_list(v):
-    return list(filter(lambda x: check_uuid(x), v))
-
-
-def get_uuid_list_from_string(v, schema=","):
-    return list(filter(lambda x: check_uuid(x), v.strip().split(schema)))
-
-
-def get_uuid_list(v):
-    if isinstance(v, list):
-        return get_uuid_list_from_list(v)
-    elif isinstance(v, str):
-        return get_uuid_list_from_string(v)
-    raise Exception("bad type {}".format(type(v)))
+def tohex(num):
+    return hex(num)[2:]
 
 
 def get_bool_from_query(query_params, key, default="true"):
     value = query_params.get(key, default)
-    return value.lower() in ('on', 'true', 'y', 'yes', 1)
+    return value.lower() in ("on", "true", "y", "yes", 1)
 
 
 def type_2_str(item):
@@ -60,3 +39,24 @@ def type_2_str(item):
         return result
 
     return "{}".format(item)
+
+
+def is_child(obj, cls):
+    # if not obj or not cls:
+    #     return False
+    # return _is_child(obj, cls)
+    return issubclass(obj, cls)
+
+
+def _is_child(obj, cls):
+    try:
+        for i in obj.__bases__:
+            if i is cls or isinstance(i, cls):
+                return True
+        for i in obj.__bases__:
+            if is_child(i, cls):
+                return True
+    except AttributeError:
+        return is_child(obj.__class__, cls)
+    return False
+

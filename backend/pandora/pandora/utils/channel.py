@@ -3,7 +3,7 @@ from django.utils.cache import caches
 import logging
 
 LOG = logging.getLogger(__name__)
-INNER_CHANNELS = "default_pandora_channel"
+INNER_CHANNELS = "default_idaas_channel"
 
 
 class PublishClient(object):

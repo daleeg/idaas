@@ -7,14 +7,14 @@ try:
     from _thread import RLock
 except ImportError:
     class RLock:
-        'Dummy reentrant lock for builds without threads'
+        "Dummy reentrant lock for builds without threads"
 
         def __enter__(self): pass
 
         def __exit__(self, exctype, excinst, exctb): pass
 
 
-    __all__ = ['lru_cache', ]
+    __all__ = ["lru_cache", ]
 
 _CacheInfo = namedtuple("CacheInfo", ["hits", "misses", "maxsize", "currsize", "cache"])
 
@@ -26,7 +26,7 @@ class _HashedSeq(list):
 
     """
 
-    __slots__ = 'hashvalue'
+    __slots__ = "hashvalue"
 
     def __init__(self, tup, hash=hash):
         self[:] = tup
@@ -95,7 +95,7 @@ def lru_cache(maxsize=32767, typed=False):
     # resulting in the inner function being passed to maxsize instead of an
     # integer or None.
     if maxsize is not None and not isinstance(maxsize, int):
-        raise TypeError('Expected maxsize to be an integer or None')
+        raise TypeError("Expected maxsize to be an integer or None")
 
     def decorating_function(user_function):
         wrapper = _lru_cache_wrapper(user_function, maxsize, typed, _CacheInfo)
@@ -111,7 +111,6 @@ def _lru_cache_wrapper(user_function, maxsize, typed, _CacheInfo):
             from django.utils.cache import caches
             from redis_collections import Dict
             redis_client = caches["lru_cache"].client.get_client()
-            print(redis_client)
             return Dict(redis=redis_client, key="PANDORA_LRU_CACHE_{}".format(name.upper()))
         except:
             import traceback
@@ -126,7 +125,7 @@ def _lru_cache_wrapper(user_function, maxsize, typed, _CacheInfo):
     hits = misses = 0
     full = False
     cache_get = cache.get  # bound method to lookup a key or return None
-    lock = RLock()  # because linkedlist updates aren't threadsafe
+    lock = RLock()  # because linkedlist updates aren"t threadsafe
     root = []  # root of the circular doubly linked list
     root[:] = [root, root, None, None]  # initialize by pointing to self
     _maxsize = maxsize
@@ -192,7 +191,7 @@ def _lru_cache_wrapper(user_function, maxsize, typed, _CacheInfo):
                     # Keep a reference to the old key and old result to
                     # prevent their ref counts from going to zero during the
                     # update. That will prevent potentially arbitrary object
-                    # clean-up code (i.e. __del__) from running while we're
+                    # clean-up code (i.e. __del__) from running while we"re
                     # still adjusting the links.
                     root = oldroot[NEXT]
                     oldkey = root[KEY]
